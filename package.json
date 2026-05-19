@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js",
-    "build": "tsc",
+    "build": "tsc && prisma generate",
+    "start": "prisma migrate deploy && tsx src/seed.ts && node dist/server.js",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed.ts",
     "db:studio": "prisma studio",
