@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── USUARIOS ────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("member")
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile          Profile?
+  registrations    EventRegistration[]
+  userChallenges   UserChallenge[]
+  userBadges       UserBadge[]
+  attendances      ClassAttendance[]
+  refreshTokens    RefreshToken[]
+  eventLikes       EventLike[]
+  eventComments    EventComment[]
+  commentLikes     CommentLike[]
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  sedeId       String?
+  streak       Int      @default(0)
+  totalClasses Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sede       Sede?                @relation(fields: [sedeId], references: [id])
+  favorites  FavoriteDiscipline[]
+}
+
+model FavoriteDiscipline {
+  profileId    String
+  disciplineId String
+
+  profile    Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  discipline Discipline @relation(fields: [disciplineId], references: [id])
+
+  @@id([profileId, disciplineId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── SEDES ───────────────────────────────────────────────────
+
+model Sede {
+  id       String  @id @default(cuid())
+  name     String
+  area     String
+  city     String  @default("Madrid")
+  address  String?
+  distance String?
+  studios  Int     @default(1)
+  gradFrom String  @default("#FFB5C8")
+  gradTo   String  @default("#FF6B6B")
+  imageUrl String?
+  active   Boolean @default(true)
+
+  profiles Profile[]
+  events   Event[]
+}
+
+// ─── DISCIPLINAS ─────────────────────────────────────────────
+
+model Discipline {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  emoji    String
+  desc     String
+  level    String  @default("Todos los niveles")
+  duration String  @default("60 min")
+  gradFrom String  @default("#FFB5C8")
+  gradTo   String  @default("#FF6B6B")
+  imageUrl String?
+  active   Boolean @default(true)
+
+  favorites   FavoriteDiscipline[]
+  events      Event[]
+  instructors InstructorDiscipline[]
+}
+
+// ─── INSTRUCTORES ─────────────────────────────────────────────
+
+model Instructor {
+  id       String  @id @default(cuid())
+  name     String
+  photoUrl String?
+  bio      String?
+  rating   Float   @default(5.0)
+  active   Boolean @default(true)
+
+  disciplines InstructorDiscipline[]
+  events      Event[]
+}
+
+model InstructorDiscipline {
+  instructorId String
+  disciplineId String
+
+  instructor Instructor @relation(fields: [instructorId], references: [id])
+  discipline Discipline @relation(fields: [disciplineId], references: [id])
+
+  @@id([instructorId, disciplineId])
+}
+
+// ─── EVENTOS ─────────────────────────────────────────────────
+
+model Event {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  disciplineId String
+  instructorId String?
+  sedeId       String
+  studio       String?
+  imageUrl     String?
+  startsAt     DateTime
+  durationMin  Int      @default(60)
+  spots        Int      @default(20)
+  price        Float    @default(0)
+  status       String   @default("published")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  discipline    Discipline          @relation(fields: [disciplineId], references: [id])
+  instructor    Instructor?         @relation(fields: [instructorId], references: [id])
+  sede          Sede                @relation(fields: [sedeId], references: [id])
+  registrations EventRegistration[]
+  attendances   ClassAttendance[]
+  likes         EventLike[]
+  comments      EventComment[]
+}
+
+model EventRegistration {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  status    String   @default("confirmed")
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model ClassAttendance {
+  id         String   @id @default(cuid())
+  userId     String
+  eventId    String
+  attendedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+// ─── RETOS Y BADGES ──────────────────────────────────────────
+
+model Challenge {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String
+  description String
+  emoji       String
+  goal        Int
+  reward      String
+  startsAt    DateTime
+  endsAt      DateTime
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  userChallenges UserChallenge[]
+}
+
+model UserChallenge {
+  id          String    @id @default(cuid())
+  userId      String
+  challengeId String
+  progress    Int       @default(0)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([userId, challengeId])
+}
+
+model Badge {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  emoji       String
+  description String?
+  condition   String?
+
+  userBadges UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+}
+
+// ─── SOCIAL ──────────────────────────────────────────────────
+
+model EventLike {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model EventComment {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  parentId  String?
+  text      String
+  createdAt DateTime @default(now())
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  parent  EventComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies EventComment[] @relation("CommentReplies")
+  likes   CommentLike[]
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment EventComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
