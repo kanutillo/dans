@@ -42,7 +42,6 @@ export async function profileRoutes(app: FastifyInstance) {
       await prisma.favoriteDiscipline.deleteMany({ where: { profileId: profile.id } });
       await prisma.favoriteDiscipline.createMany({
         data: favoriteIds.map((disciplineId: string) => ({ profileId: profile.id, disciplineId })),
-        skipDuplicates: true,
       });
     }
 
