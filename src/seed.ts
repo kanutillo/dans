@@ -3,7 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient({ adapter: new PrismaLibSql({ url: process.env.DATABASE_URL! }) });
+const prisma = new PrismaClient({ adapter: new PrismaLibSql({
+  url: process.env.DATABASE_URL!,
+  ...(process.env.DATABASE_AUTH_TOKEN ? { authToken: process.env.DATABASE_AUTH_TOKEN } : {}),
+}) });
 
 const CDN = 'https://cdn.prod.website-files.com/64a27c8ac2fc673da3530dd8';
 
