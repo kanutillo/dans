@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "prisma generate && tsc",
-    "start": "prisma migrate deploy && node dist/seed.js && node dist/server.js",
+    "start": "node scripts/migrate-turso.mjs && node dist/seed.js && node dist/server.js",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed.ts",
     "db:studio": "prisma studio",
