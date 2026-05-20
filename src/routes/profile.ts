@@ -21,9 +21,12 @@ export async function profileRoutes(app: FastifyInstance) {
       orderBy: { earnedAt: 'desc' },
     });
 
-    const stats = await prisma.classAttendance.count({ where: { userId } });
+    const totalClasses = await prisma.classAttendance.count({ where: { userId } });
+    const totalRegistrations = await prisma.eventRegistration.count({
+      where: { userId, status: 'confirmed' },
+    });
 
-    return reply.send({ profile, badges, totalClasses: stats });
+    return reply.send({ profile, badges, totalClasses, totalRegistrations });
   });
 
   // PATCH /profile  (actualizar sede, favoritos)
