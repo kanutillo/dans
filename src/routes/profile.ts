@@ -60,8 +60,8 @@ export async function profileRoutes(app: FastifyInstance) {
     });
 
     const allBadges = await prisma.badge.findMany();
-    const earnedIds = new Set(earned.map(b => b.badgeId));
-    const locked = allBadges.filter(b => !earnedIds.has(b.id));
+    const earnedIds = new Set(earned.map((b: any) => b.badgeId));
+    const locked = allBadges.filter((b: any) => !earnedIds.has(b.id));
 
     return reply.send({ earned, locked });
   });

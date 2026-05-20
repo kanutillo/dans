@@ -13,7 +13,7 @@ export async function eventsRoutes(app: FastifyInstance) {
       },
       orderBy: { event: { startsAt: 'asc' } },
     });
-    return reply.send(registrations.map(r => r.event));
+    return reply.send(registrations.map((r: any) => r.event));
   });
 
   // GET /events  (con filtros: ?sedeId=&disciplineId=&from=&to=)
@@ -39,7 +39,7 @@ export async function eventsRoutes(app: FastifyInstance) {
       orderBy: { startsAt: 'asc' },
     });
 
-    const result = events.map(e => ({
+    const result = events.map((e: any) => ({
       ...e,
       taken: e._count.registrations,
       _count: undefined,
